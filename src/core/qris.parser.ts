@@ -63,6 +63,10 @@ function parseTags<T>(data: string, tagMapping: Record<string, (result: T, value
         const value = data.slice(4, 4 + length);
         data = data.slice(4 + length);
 
+        console.log({
+            tag, length, value
+        })
+
         const parser = tagMapping[tag];
         if (parser) {
             parser(result, value);
@@ -76,17 +80,17 @@ function parseTags<T>(data: string, tagMapping: Record<string, (result: T, value
  * Class for parsing and storing QRIS (Quick Response Code Indonesian Standard) data.
  */
 export default class QRISParser {
-    public qrisData: IQrisData;
+    public data: IQrisData;
 
     constructor() {
-        this.qrisData = {} as IQrisData;
+        this.data = {} as IQrisData;
     }
 
     /**
      * Parses the entire QRIS data string.
      * @param data QRIS data string to be parsed.
      */
-    parse(data: string): Error | null {
+    parse(data: string): IQrisData {
         const tagMapping: Record<string, (result: IQrisData, value: string) => void> = {
             '00': (result, value) => result.payloadFormatIndicator = value,
             '01': (result, value) => result.pointOfInitiationMethod = value === '11' ? 'static' : 'dynamic',
@@ -111,8 +115,9 @@ export default class QRISParser {
             ...this.createRangeParser('80', '99', (result, value) => result.unreserved = value)
         };
 
-        this.qrisData = parseTags<IQrisData>(data, tagMapping);
-        return null;
+        this.data = parseTags<IQrisData>(data, tagMapping);
+
+        return this.data
     }
 
     /**
